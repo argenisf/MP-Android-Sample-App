@@ -21,16 +21,39 @@ public class MainActivity extends AppCompatActivity {
     private JSONObject mCurrentProps;
 
     private Button mMainButton;
+    private JSONObject mCurrentSuperProps;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mContext = this;
+        // Initialize the SDK
         mixpanel = MixpanelAPI.getInstance(mContext, MIXPANEL_TOKEN);
-        mixpanel.unregisterSuperProperty("loggedIn");
-        mixpanel.track("App launched");
+        // identify so that people updates are flushed when we need them
+        mixpanel.getPeople().identify(mixpanel.getDistinctId());
+        // get the current values of super properties
+        mCurrentSuperProps = mixpanel.getSuperProperties();
 
+
+        // increment the number of app launches and track app launched
+        try{
+            int nLaunches = 0;
+            if(mCurrentSuperProps.has("N launches")){
+                nLaunches = mCurrentSuperProps.getInt("N launches");
+            }
+            nLaunches++;
+            mCurrentSuperProps.put("N launches", nLaunches);
+            mixpanel.registerSuperProperties(mCurrentSuperProps);
+            if(mCurrentSuperProps.has("loggedIn") && mCurrentSuperProps.getBoolean("loggedIn")){
+                //if the user is logged in, increment the app launch count in the profile
+                mixpanel.getPeople().increment("N launches", 1);
+            }
+        }catch (JSONException e){ }
+
+
+        mixpanel.track("App launched");
+        mContext = this;
         mMainButton = (Button)findViewById(R.id.btnMain);
 
 
@@ -38,13 +61,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Boolean loggedIn = false;
-                mCurrentProps = mixpanel.getSuperProperties();
+                mCurrentSuperProps = mixpanel.getSuperProperties();
                 try {
-                    if(mCurrentProps.has("loggedIn") && mCurrentProps.getBoolean("loggedIn")){
+                    if(mCurrentSuperProps.has("loggedIn") && mCurrentSuperProps.getBoolean("loggedIn")){
                         loggedIn = true;
                     }else{
-                        mCurrentProps.put("loggedIn", loggedIn);
+                        mCurrentSuperProps.put("loggedIn", loggedIn);
                     }
+                    mixpanel.registerSuperProperties(mCurrentSuperProps);
                 } catch (JSONException e) {}
                 Intent intent;
                 if(loggedIn){
@@ -52,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
                     Sticker mSticker = new Sticker(true);
                     intent.putExtra("stickerId", mSticker.getSticketId());
                 }else{
+                    mixpanel.track("Auth started");
                     intent = new Intent(mContext, Auth.class);
                 }
 

@@ -42,4 +42,20 @@ public class Sticker {
         return mArrayOfStickers[mSelectedIndex];
     }
 
+    public String getStickerName(int id){
+        String name = "Java";
+
+        if(id == R.mipmap.no_luck){
+            name = "No luck";
+        }else if (id == R.mipmap.burger){
+            name = "Burger";
+        }else if (id == R.mipmap.muffin){
+            name = "Muffin";
+        }else if (id == R.mipmap.group){
+            name = "EMEA group";
+        }
+
+        return name;
+    }
+
 }
