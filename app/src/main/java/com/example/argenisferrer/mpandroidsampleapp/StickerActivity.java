@@ -32,9 +32,11 @@ public class StickerActivity extends AppCompatActivity {
             if (intent.getBooleanExtra("justSignedUp", false) && mCurrentSuperProps.has("$created")
                     && mCurrentSuperProps.has("$email") && mCurrentSuperProps.has("$name")) {
                 String theEmail = mCurrentSuperProps.getString("$email");
+                int nLaunches = mCurrentSuperProps.getInt("N launches");
                 props.put("$created", mCurrentSuperProps.getString("$created"));
                 props.put("$email", theEmail);
                 props.put("$name", mCurrentSuperProps.getString("$name"));
+                props.put("N launches", nLaunches);
                 mixpanel.identify(theEmail);
                 mixpanel.getPeople().identify(theEmail);
                 // track success

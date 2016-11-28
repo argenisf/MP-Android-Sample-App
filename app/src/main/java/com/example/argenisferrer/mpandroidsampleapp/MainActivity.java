@@ -15,7 +15,7 @@ import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
-    public static final String MIXPANEL_TOKEN = "f8bd7cddaf94642530004c3d0509691f";
+    public static final String MIXPANEL_TOKEN = "3626e52e653adb8f3633dc1530b2a155";
     private MixpanelAPI mixpanel;
     private Context mContext;
     private JSONObject mCurrentProps;
@@ -30,13 +30,18 @@ public class MainActivity extends AppCompatActivity {
         mContext = this;
         // Initialize the SDK
         mixpanel = MixpanelAPI.getInstance(mContext, MIXPANEL_TOKEN);
-        // identify so that people updates are flushed when we need them
         mixpanel.getPeople().identify(mixpanel.getDistinctId());
-        // get the current values of super properties
         mCurrentSuperProps = mixpanel.getSuperProperties();
 
-
-        // increment the number of app launches and track app launched
+        //
+        /*
+        * Goal: increment the number of app launches and track app launched
+        *
+        * We will check the current super properties to see if the N launches one exists. If it does,
+        * we will increment it, and if it doesn't we will set it to 1.
+        * Also, we are logged in, we will increase the people counter.
+        *
+        * */
         try{
             int nLaunches = 0;
             if(mCurrentSuperProps.has("N launches")){
@@ -46,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
             mCurrentSuperProps.put("N launches", nLaunches);
             mixpanel.registerSuperProperties(mCurrentSuperProps);
             if(mCurrentSuperProps.has("loggedIn") && mCurrentSuperProps.getBoolean("loggedIn")){
-                //if the user is logged in, increment the app launch count in the profile
                 mixpanel.getPeople().increment("N launches", 1);
             }
         }catch (JSONException e){ }
@@ -60,6 +64,13 @@ public class MainActivity extends AppCompatActivity {
         mMainButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                /*
+                * Goal: the main button was clicked. If the user has already logged in, we want to
+                * show him/her the sticker; otherwise, we want authentication to happen.
+                * We do this by checking the loggedIn super prop
+                * */
+
                 Boolean loggedIn = false;
                 mCurrentSuperProps = mixpanel.getSuperProperties();
                 try {
@@ -70,6 +81,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                     mixpanel.registerSuperProperties(mCurrentSuperProps);
                 } catch (JSONException e) {}
+
+
                 Intent intent;
                 if(loggedIn){
                     intent = new Intent(mContext, StickerActivity.class);
